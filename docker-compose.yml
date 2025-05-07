@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  blog:
+    image: postgres
+    environment:
+      POSTGRES_DB: "blogdb"
+      POSTGRES_USER: "bloguser"
+      POSTGRES_PASSWORD: "blogpassword"
+    ports:
+      - 5432:5432
+
+  flyway:
+    image: flyway/flyway:latest
+    command: ["-url=jdbc:postgresql://blog:5432/blogdb", "-user=bloguser", "-password=blogpassword", "migrate"]
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      - blog
