@@ -7,11 +7,11 @@ CREATE TABLE blog (
 	primary key (blogid)
 );
 
-create table users (
+CREATE TABLE users (
 	id uuid,
 	username VARCHAR(30),
 	password VARCHAR,
 	refreshToken VARCHAR,
-	admin bool,
+	admin BOOLEAN,
 	primary key (id)
 );

@@ -20,7 +20,7 @@ func NewPgRepository(pool *pgxpool.Pool) *PgRepository {
 }
 
 func (p *PgRepository) Create(ctx context.Context, blog *model.Blog) error {
-	_, err := p.pool.Exec(ctx, "INSERT INTO blog (blogid, userid, title, content) VALUES ($1, $2, $3)",
+	_, err := p.pool.Exec(ctx, "INSERT INTO blog (blogid, userid, title, content) VALUES ($1, $2, $3, $4)",
 		blog.BlogID, blog.UserID, blog.Title, blog.Content)
 	if err != nil {
 		return fmt.Errorf("error in method p.pool.Exec(): %w", err)
