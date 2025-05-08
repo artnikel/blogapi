@@ -46,11 +46,11 @@ func (srvUser *UserService) SignUp(ctx context.Context, user *model.User) error 
 	var err error
 	user.Password, err = srvUser.HashPassword(user.Password)
 	if err != nil {
-		return fmt.Errorf("ServiceUser -> HashPassword -> error: %w", err)
+		return fmt.Errorf("HashPassword - %w", err)
 	}
 	err = srvUser.rpsUser.SignUp(ctx, user)
 	if err != nil {
-		return fmt.Errorf("ServiceUser -> UserRepository -> SignUp -> error: %w", err)
+		return fmt.Errorf("SignUp - %w", err)
 	}
 	return nil
 }
@@ -60,25 +60,25 @@ func (srvUser *UserService) Login(ctx context.Context, user *model.User) (*Token
 	user.ID = id
 	user.Admin = admin
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser ->  Login -> RepositoryUser -> GetPasswordByUsernsame -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("GetDataByUsername - %w", err)
 	}
 	verified, err := srvUser.CheckPasswordHash(hash, user.Password)
 	if err != nil || !verified {
-		return &TokenPair{}, fmt.Errorf("ServiceUser ->  Login -> CheckPasswordHash -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("CheckPasswordHash - %w", err)
 	}
 	tokenPair, err := srvUser.GenerateTokenPair(user.ID, user.Admin)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser ->  Login -> GenerateTokenPair -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("GenerateTokenPair - %w", err)
 	}
 	sum := sha256.Sum256([]byte(tokenPair.RefreshToken))
 	hashedRefreshToken, err := srvUser.HashPassword(sum[:])
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser -> Login -> HashPassword -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("HashPassword - %w", err)
 	}
 	user.RefreshToken = string(hashedRefreshToken)
 	err = srvUser.rpsUser.AddRefreshToken(context.Background(), user)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUsere ->  Login -> RepositoryUser -> AddRefreshToken -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("AddRefreshToken - %w", err)
 	}
 	return &tokenPair, nil
 }
@@ -86,32 +86,32 @@ func (srvUser *UserService) Login(ctx context.Context, user *model.User) (*Token
 func (srvUser *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (*TokenPair, error) {
 	id, isAdmin, err := srvUser.TokensIDCompare(tokenPair)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser -> Refresh -> TokensIDCompare -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("TokensIDCompare - %w", err)
 	}
 	hash, err := srvUser.rpsUser.GetRefreshTokenByID(ctx, id)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser ->  Refresh -> RepositoryUser -> GetPasswordByUsernsame -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("GetRefreshTokenByID - %w", err)
 	}
 	sum := sha256.Sum256([]byte(tokenPair.RefreshToken))
 	verified, err := srvUser.CheckPasswordHash([]byte(hash), sum[:])
 	if err != nil || !verified {
-		return &TokenPair{}, fmt.Errorf("ServiceUser ->  Refresh -> CheckPasswordHash -> error: refreshToken invalid")
+		return &TokenPair{}, fmt.Errorf("CheckPasswordHash error: refreshToken invalid")
 	}
 	tokenPair, err = srvUser.GenerateTokenPair(id, isAdmin)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser ->  Refresh -> GenerateTokenPair -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("GenerateTokenPair - %w", err)
 	}
 	sum = sha256.Sum256([]byte(tokenPair.RefreshToken))
 	hashedRefreshToken, err := srvUser.HashPassword(sum[:])
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUser -> Refresh -> HashPassword -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("HashPassword - %w", err)
 	}
 	var user model.User
 	user.RefreshToken = string(hashedRefreshToken)
 	user.ID = id
 	err = srvUser.rpsUser.AddRefreshToken(context.Background(), &user)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("ServiceUsere ->  Refresh -> RepositoryUser -> AddRefreshToken -> error: %w", err)
+		return &TokenPair{}, fmt.Errorf("AddRefreshToken - %w", err)
 	}
 	return &tokenPair, nil
 }
@@ -119,7 +119,7 @@ func (srvUser *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (*
 func (srvUser *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, bool, error) {
 	accessToken, err := validateToken(tokenPair.AccessToken, srvUser.cfg.BlogTokenSignature)
 	if err != nil {
-		return uuid.Nil, false, fmt.Errorf("ServiceUser -> TokensIDCompare -> accessToken -> middleware -> ValidateToken -> error: %w", err)
+		return uuid.Nil, false, fmt.Errorf("validateToken - %w", err)
 	}
 	var accessID uuid.UUID
 	var uuidID uuid.UUID
@@ -127,25 +127,25 @@ func (srvUser *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, boo
 	if claims, ok := accessToken.Claims.(jwt.MapClaims); ok && accessToken.Valid {
 		uuidID, err = uuid.Parse(claims["id"].(string))
 		if err != nil {
-			return uuid.Nil, false, fmt.Errorf("ServiceUser -> TokensIDCompare -> accessToken -> uuid.Parse -> error: %w", err)
+			return uuid.Nil, false, fmt.Errorf("uuid.Parse - %w", err)
 		}
 		isAdmin = claims["isAdmin"].(bool)
 		accessID = uuidID
 	}
 	refreshToken, err := validateToken(tokenPair.RefreshToken, srvUser.cfg.BlogTokenSignature)
 	if err != nil {
-		return uuid.Nil, false, fmt.Errorf("ServiceUser -> TokensIDCompare -> refreshToken -> middleware -> ValidateToken -> error: %w", err)
+		return uuid.Nil, false, fmt.Errorf("validateToken - %w", err)
 	}
 	var refreshID uuid.UUID
 	if claims, ok := refreshToken.Claims.(jwt.MapClaims); ok && refreshToken.Valid {
 		exp := claims["exp"].(float64)
 		uuidID, err = uuid.Parse(claims["id"].(string))
 		if err != nil {
-			return uuid.Nil, false, fmt.Errorf("ServiceUser -> TokensIDCompare -> accessToken  -> uuid.Parse -> error: %w", err)
+			return uuid.Nil, false, fmt.Errorf("uuid.Parse - %w", err)
 		}
 		refreshID = uuidID
 		if exp < float64(time.Now().Unix()) {
-			return uuid.Nil, false, fmt.Errorf("ServiceUser ->  TokensIDCompare -> middleware -> ValidateToken -> error: %w", err)
+			return uuid.Nil, false, fmt.Errorf("validateToken - %w", err)
 		}
 	}
 	if accessID != refreshID {
@@ -157,7 +157,7 @@ func (srvUser *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, boo
 func (srvUser *UserService) HashPassword(password []byte) ([]byte, error) {
 	bytes, err := bcrypt.GenerateFromPassword(password, bcryptCost)
 	if err != nil {
-		return bytes, fmt.Errorf("ServiceUser -> HashPassword -> GenerateFromPassword -> error: %w", err)
+		return bytes, fmt.Errorf("GenerateFromPassword - %w", err)
 	}
 	return bytes, nil
 }
@@ -165,7 +165,7 @@ func (srvUser *UserService) HashPassword(password []byte) ([]byte, error) {
 func (srvUser *UserService) CheckPasswordHash(hash, password []byte) (bool, error) {
 	err := bcrypt.CompareHashAndPassword(hash, password)
 	if err != nil {
-		return false, fmt.Errorf("ServiceUser -> CheckPasswordHash -> CompareHashAndPassword -> error: %w", err)
+		return false, fmt.Errorf("CompareHashAndPassword - %w", err)
 	}
 	return true, nil
 }
@@ -173,11 +173,11 @@ func (srvUser *UserService) CheckPasswordHash(hash, password []byte) (bool, erro
 func (srvUser *UserService) GenerateTokenPair(id uuid.UUID, isAdmin bool) (TokenPair, error) {
 	accessToken, err := srvUser.GenerateJWTToken(accessTokenExpiration, id, isAdmin)
 	if err != nil {
-		return TokenPair{}, fmt.Errorf("ServiceUser -> GenerateTokenPair -> accessToken -> GenerateJWTToken -> error: %w", err)
+		return TokenPair{}, fmt.Errorf("GenerateJWTToken - %w", err)
 	}
 	refreshToken, err := srvUser.GenerateJWTToken(refreshTokenExpiration, id, isAdmin)
 	if err != nil {
-		return TokenPair{}, fmt.Errorf("ServiceUser -> GenerateTokenPair -> refreshToken -> GenerateJWTToken -> error: %w", err)
+		return TokenPair{}, fmt.Errorf("GenerateJWTToken - %w", err)
 	}
 	return TokenPair{
 		AccessToken:  accessToken,
@@ -194,7 +194,7 @@ func (srvUser *UserService) GenerateJWTToken(expiration time.Duration, id uuid.U
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(srvUser.cfg.BlogTokenSignature))
 	if err != nil {
-		return "", fmt.Errorf("ServiceUser -> GenerateJWTToken -> token.SignedString -> error: %w", err)
+		return "", fmt.Errorf("token.SignedString - %w", err)
 	}
 	return tokenString, nil
 }

@@ -1,6 +1,6 @@
 CREATE TABLE blog (
 	blogid uuid,
-	profileid uuid,
+	userid uuid,
 	title varchar,
     content varchar,
 	releasetime timestamp DEFAULT NOW(),
