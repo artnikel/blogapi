@@ -20,7 +20,7 @@ func connectPostgres() (*pgxpool.Pool, error) {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
-	conf, err := pgxpool.ParseConfig(cfg.PostgresPath)
+	conf, err := pgxpool.ParseConfig(cfg.BlogPostgresPath)
 	if err != nil {
 		return nil, fmt.Errorf("error in method pgxpool.ParseConfig: %v", err)
 	}

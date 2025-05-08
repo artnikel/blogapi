@@ -1,5 +1,6 @@
 package config
 
 type Config struct {
-	PostgresPath string `env:"POSTGRES_PATH"`
+	BlogPostgresPath   string `env:"BLOG_POSTGRES_PATH"`
+	BlogTokenSignature string `env:"BLOG_TOKEN_SIGNATURE"`
 }
