@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/artnikel/blogapi/internal/config"
+	"github.com/artnikel/blogapi/internal/middleware"
 	"github.com/artnikel/blogapi/internal/model"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -117,7 +118,7 @@ func (srvUser *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (*
 }
 
 func (srvUser *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, bool, error) {
-	accessToken, err := validateToken(tokenPair.AccessToken, srvUser.cfg.BlogTokenSignature)
+	accessToken, err := middleware.ValidateToken(tokenPair.AccessToken, srvUser.cfg.BlogTokenSignature)
 	if err != nil {
 		return uuid.Nil, false, fmt.Errorf("validateToken - %w", err)
 	}
@@ -132,7 +133,7 @@ func (srvUser *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, boo
 		isAdmin = claims["isAdmin"].(bool)
 		accessID = uuidID
 	}
-	refreshToken, err := validateToken(tokenPair.RefreshToken, srvUser.cfg.BlogTokenSignature)
+	refreshToken, err := middleware.ValidateToken(tokenPair.RefreshToken, srvUser.cfg.BlogTokenSignature)
 	if err != nil {
 		return uuid.Nil, false, fmt.Errorf("validateToken - %w", err)
 	}
@@ -197,18 +198,5 @@ func (srvUser *UserService) GenerateJWTToken(expiration time.Duration, id uuid.U
 		return "", fmt.Errorf("token.SignedString - %w", err)
 	}
 	return tokenString, nil
-}
-
-func validateToken(tokenString, secretKey string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(secretKey), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return token, nil
 }
 

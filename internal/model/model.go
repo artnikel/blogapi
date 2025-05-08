@@ -7,8 +7,8 @@ import (
 )
 
 type Blog struct {
-	BlogID      uuid.UUID `json:"blogid,omitempty" validate:"required"`
-	UserID   uuid.UUID `json:"userid,omitempty" validate:"required"`
+	BlogID      uuid.UUID `json:"blogid,omitempty" validate:"required" db:"blogid"`
+	UserID      uuid.UUID `json:"userid,omitempty" validate:"required" db:"userid"`
 	Title       string    `json:"title" validate:"required"`
 	Content     string    `json:"content" validate:"required"`
 	ReleaseTime time.Time `json:"releasetime"`

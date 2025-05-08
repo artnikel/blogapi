@@ -51,6 +51,35 @@ type InputData struct {
 	Password string `json:"password" form:"password"`
 }
 
+func (h *EntityBlog) Create(c echo.Context) error {
+	var newBlog model.Blog
+	newBlog.BlogID = uuid.New()
+	err := c.Bind(&newBlog)
+	if err != nil {
+		log.Errorf("error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "filling car error")
+	}
+	userID, ok := c.Get("id").(uuid.UUID)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
+	}
+	newBlog.UserID = userID
+	err = h.validate.StructCtx(c.Request().Context(), newBlog)
+	if err != nil {
+		log.Errorf("error: %v", err)
+		return c.JSON(http.StatusBadRequest, "Not valid data")
+	}
+	err = h.srvBlog.Create(c.Request().Context(), &newBlog)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Title":   newBlog.Title,
+			"Content": newBlog.Content,
+		}).Errorf("failed to get data: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Create")
+	}
+	return c.JSON(http.StatusCreated, newBlog)
+}
+
 func (h *EntityUser) SignUpUser(c echo.Context) error {
 	requestData := &InputData{}
 	err := c.Bind(requestData)
@@ -80,7 +109,7 @@ func (h *EntityUser) SignUpUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, "User created")
 }
 
-func (h *EntityUser) SignUpAdmin(ctx context.Context, c echo.Context) error {
+func (h *EntityUser) SignUpAdmin(c echo.Context) error {
 	requestData := &InputData{}
 	err := c.Bind(requestData)
 	if err != nil {
@@ -109,7 +138,7 @@ func (h *EntityUser) SignUpAdmin(ctx context.Context, c echo.Context) error {
 	return c.JSON(http.StatusCreated, "Admin created")
 }
 
-func (h *EntityUser) Login(ctx context.Context, c echo.Context) error {
+func (h *EntityUser) Login(c echo.Context) error {
 	requestData := &InputData{}
 	err := c.Bind(requestData)
 	if err != nil {
@@ -125,7 +154,7 @@ func (h *EntityUser) Login(ctx context.Context, c echo.Context) error {
 		log.Errorf("error: %v", err)
 		return c.JSON(http.StatusBadRequest, "Not valid data")
 	}
-	tokenPair, err := h.srvUser.Login(ctx, loginedUser)
+	tokenPair, err := h.srvUser.Login(c.Request().Context(), loginedUser)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Username": loginedUser.Username,
