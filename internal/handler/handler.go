@@ -74,10 +74,39 @@ func (h *EntityBlog) Create(c echo.Context) error {
 		log.WithFields(log.Fields{
 			"Title":   newBlog.Title,
 			"Content": newBlog.Content,
-		}).Errorf("failed to get data: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Create")
+		}).Errorf("srvBlog.Create - %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create blog")
 	}
 	return c.JSON(http.StatusCreated, newBlog)
+}
+
+func (h *EntityBlog) Get(c echo.Context) error {
+	id := c.Param("id")
+	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
+	if err != nil {
+		log.Errorf("h.validate.VarCtx error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate id")
+	}
+	uuidID, err := uuid.Parse(id)
+	if err != nil {
+		log.Errorf("uuid.Parse error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to parse id")
+	}
+	blog, err := h.srvBlog.Get(c.Request().Context(), uuidID)
+	if err != nil {
+		log.WithField("ID", uuidID).Errorf("srvBlog.Get - %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to get blog")
+	}
+	return c.JSON(http.StatusOK, blog)
+}
+
+func (h *EntityBlog) GetAll(c echo.Context) error {
+	blogs, err := h.srvBlog.GetAll(c.Request().Context())
+	if err != nil {
+		log.Errorf("srvBlog.GetAll - %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to get all blogs")
+	}
+	return c.JSON(http.StatusOK, blogs)
 }
 
 func (h *EntityUser) SignUpUser(c echo.Context) error {
@@ -103,8 +132,8 @@ func (h *EntityUser) SignUpUser(c echo.Context) error {
 		log.WithFields(log.Fields{
 			"Username": newUser.Username,
 			"Password": newUser.Password,
-		}).Errorf("failed to get data: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "SignUp - :")
+		}).Errorf("srvUser.SignUp - %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to sign up user")
 	}
 	return c.JSON(http.StatusCreated, "User created")
 }
@@ -132,8 +161,8 @@ func (h *EntityUser) SignUpAdmin(c echo.Context) error {
 		log.WithFields(log.Fields{
 			"Username": newAdmin.Username,
 			"Password": newAdmin.Password,
-		}).Errorf("failed to get data: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "SignUpAdmin - :")
+		}).Errorf("srvUser.SignUpAdmin - %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to sign up admin")
 	}
 	return c.JSON(http.StatusCreated, "Admin created")
 }
@@ -159,8 +188,8 @@ func (h *EntityUser) Login(c echo.Context) error {
 		log.WithFields(log.Fields{
 			"Username": loginedUser.Username,
 			"Password": loginedUser.Password,
-		}).Errorf("failed to get data: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Login - :")
+		}).Errorf("srvUser.Login - %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to log in")
 	}
 	return c.JSON(http.StatusCreated, echo.Map{
 		"Access Token : ":  tokenPair.AccessToken,

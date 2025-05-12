@@ -60,6 +60,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.POST("/create", blogHandler.Create, customMidleware.JWTMiddleware(&cfg))
+	e.GET("/get/:id", blogHandler.Get, customMidleware.JWTMiddleware(&cfg))
+	e.GET("/getall", blogHandler.GetAll, customMidleware.JWTMiddleware(&cfg))
 	e.POST("/signup", userHandler.SignUpUser)
 	e.POST("/signupadmin", userHandler.SignUpAdmin, customMidleware.JWTMiddleware(&cfg))
 	e.POST("/login", userHandler.Login)
