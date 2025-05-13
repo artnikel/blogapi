@@ -84,37 +84,37 @@ func (s *UserService) Login(ctx context.Context, user *model.User) (*TokenPair, 
 	return &tokenPair, nil
 }
 
-func (s *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (*TokenPair, error) {
+func (s *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (TokenPair, error) {
 	id, isAdmin, err := s.TokensIDCompare(tokenPair)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("TokensIDCompare - %w", err)
+		return TokenPair{}, fmt.Errorf("TokensIDCompare - %w", err)
 	}
 	hash, err := s.rpsUser.GetRefreshTokenByID(ctx, id)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("rpsUser.GetRefreshTokenByID - %w", err)
+		return TokenPair{}, fmt.Errorf("rpsUser.GetRefreshTokenByID - %w", err)
 	}
 	sum := sha256.Sum256([]byte(tokenPair.RefreshToken))
 	verified, err := s.CheckPasswordHash([]byte(hash), sum[:])
 	if err != nil || !verified {
-		return &TokenPair{}, fmt.Errorf("CheckPasswordHash error: refreshToken invalid")
+		return TokenPair{}, fmt.Errorf("CheckPasswordHash error: refreshToken invalid")
 	}
 	tokenPair, err = s.GenerateTokenPair(id, isAdmin)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("GenerateTokenPair - %w", err)
+		return TokenPair{}, fmt.Errorf("GenerateTokenPair - %w", err)
 	}
 	sum = sha256.Sum256([]byte(tokenPair.RefreshToken))
 	hashedRefreshToken, err := s.HashPassword(sum[:])
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("HashPassword - %w", err)
+		return TokenPair{}, fmt.Errorf("HashPassword - %w", err)
 	}
 	var user model.User
 	user.RefreshToken = string(hashedRefreshToken)
 	user.ID = id
 	err = s.rpsUser.AddRefreshToken(context.Background(), &user)
 	if err != nil {
-		return &TokenPair{}, fmt.Errorf("rpsUser.AddRefreshToken - %w", err)
+		return TokenPair{}, fmt.Errorf("rpsUser.AddRefreshToken - %w", err)
 	}
-	return &tokenPair, nil
+	return tokenPair, nil
 }
 
 func (s *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, bool, error) {
