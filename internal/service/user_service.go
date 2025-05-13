@@ -1,4 +1,4 @@
-// Package service realize bisnes-logic of the microservice
+// Package service provides the business logic for the auth
 package service
 
 import (
@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserRepository is an interface that contains auth methods
 type UserRepository interface {
 	SignUp(ctx context.Context, user *model.User) error
 	GetDataByUsername(ctx context.Context, username string) (uuid.UUID, []byte, bool, error)
@@ -23,26 +24,31 @@ type UserRepository interface {
 	GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (string, error)
 }
 
+// UserService contains UserRepository interface
 type UserService struct {
 	rpsUser UserRepository
 	cfg     *config.Config
 }
 
+// NewUserService accepts UserRepository object and returnes an object of type *UserService
 func NewUserService(rpsUser UserRepository, cfg *config.Config) *UserService {
 	return &UserService{rpsUser: rpsUser, cfg: cfg}
 }
 
+// Expiration time for an access and a refresh tokens
 const (
 	accessTokenExpiration  = 15 * time.Minute
 	refreshTokenExpiration = 72 * time.Hour
 	bcryptCost             = 14
 )
 
+// TokenPair contains an Access and a Refresh tokens
 type TokenPair struct {
 	AccessToken  string
 	RefreshToken string
 }
 
+// SignUp is a method of UserService that calls  method of Repository
 func (s *UserService) SignUp(ctx context.Context, user *model.User) error {
 	var err error
 	user.Password, err = s.HashPassword(user.Password)
@@ -56,6 +62,7 @@ func (s *UserService) SignUp(ctx context.Context, user *model.User) error {
 	return nil
 }
 
+// Login is a method of UserService that calls method of Repository
 func (s *UserService) Login(ctx context.Context, user *model.User) (*TokenPair, error) {
 	id, hash, admin, err := s.rpsUser.GetDataByUsername(ctx, user.Username)
 	user.ID = id
@@ -84,6 +91,7 @@ func (s *UserService) Login(ctx context.Context, user *model.User) (*TokenPair, 
 	return &tokenPair, nil
 }
 
+// Refresh is a method of ServiceUser that refreshes access and refresh tokens
 func (s *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (TokenPair, error) {
 	id, isAdmin, err := s.TokensIDCompare(tokenPair)
 	if err != nil {
@@ -117,6 +125,7 @@ func (s *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (TokenPa
 	return tokenPair, nil
 }
 
+// TokensIDCompare compares IDs from refresh and access token for being equal
 func (s *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, bool, error) {
 	accessToken, err := middleware.ValidateToken(tokenPair.AccessToken, s.cfg.BlogTokenSignature)
 	if err != nil {
@@ -155,6 +164,7 @@ func (s *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, bool, err
 	return accessID, isAdmin, nil
 }
 
+// HashPassword is a method of ServiceUser that makes from bytes hashed value
 func (s *UserService) HashPassword(password []byte) ([]byte, error) {
 	bytes, err := bcrypt.GenerateFromPassword(password, bcryptCost)
 	if err != nil {
@@ -163,6 +173,7 @@ func (s *UserService) HashPassword(password []byte) ([]byte, error) {
 	return bytes, nil
 }
 
+// CheckPasswordHash is a method of ServiceUser that checks if hash is equal hash from given password
 func (s *UserService) CheckPasswordHash(hash, password []byte) (bool, error) {
 	err := bcrypt.CompareHashAndPassword(hash, password)
 	if err != nil {
@@ -171,6 +182,7 @@ func (s *UserService) CheckPasswordHash(hash, password []byte) (bool, error) {
 	return true, nil
 }
 
+// GenerateTokenPair generates pair of access and refresh tokens
 func (s *UserService) GenerateTokenPair(id uuid.UUID, isAdmin bool) (TokenPair, error) {
 	accessToken, err := s.GenerateJWTToken(accessTokenExpiration, id, isAdmin)
 	if err != nil {
@@ -186,6 +198,7 @@ func (s *UserService) GenerateTokenPair(id uuid.UUID, isAdmin bool) (TokenPair, 
 	}, nil
 }
 
+// GenerateJWTToken is a method of ServiceUser that generate JWT token with given expiration with user id
 func (s *UserService) GenerateJWTToken(expiration time.Duration, id uuid.UUID, isAdmin bool) (string, error) {
 	claims := &jwt.MapClaims{
 		"exp":     time.Now().Add(expiration).Unix(),

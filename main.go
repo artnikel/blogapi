@@ -1,3 +1,4 @@
+// A main package
 package main
 
 import (
@@ -53,25 +54,24 @@ func main() {
 	repoPostgres := repository.NewPgRepository(pool)
 	blogService := service.NewBlogService(repoPostgres)
 	userService := service.NewUserService(repoPostgres, &cfg)
-	blogHandler := handler.NewEntityBlog(blogService, v)
-	userHandler := handler.NewEntityUser(userService, v)
+	handlers := handler.NewHandler(blogService, userService, v)
 
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/create", blogHandler.Create, customMiddleware.JWTMiddleware(&cfg))
-	e.GET("/get/:id", blogHandler.Get, customMiddleware.JWTMiddleware(&cfg))
-	e.DELETE("/delete/:id", blogHandler.Delete, customMiddleware.JWTMiddleware(&cfg))
-	e.DELETE("/deletefromuser/:id", blogHandler.DeleteByUserID, customMiddleware.JWTMiddleware(&cfg))
-	e.PUT("/update", blogHandler.Update, customMiddleware.JWTMiddleware(&cfg))
-	e.GET("/getall", blogHandler.GetAll, customMiddleware.JWTMiddleware(&cfg))
+	e.POST("/create", handlers.Create, customMiddleware.JWTMiddleware(&cfg))
+	e.GET("/get/:id", handlers.Get, customMiddleware.JWTMiddleware(&cfg))
+	e.DELETE("/delete/:id", handlers.Delete, customMiddleware.JWTMiddleware(&cfg))
+	e.DELETE("/deletefromuser/:id", handlers.DeleteByUserID, customMiddleware.JWTMiddleware(&cfg))
+	e.PUT("/update", handlers.Update, customMiddleware.JWTMiddleware(&cfg))
+	e.GET("/getall", handlers.GetAll, customMiddleware.JWTMiddleware(&cfg))
 
-	e.POST("/signup", userHandler.SignUpUser)
-	e.POST("/signupadmin", userHandler.SignUpAdmin, customMiddleware.JWTMiddleware(&cfg))
-	e.POST("/login", userHandler.Login)
-	e.POST("/refresh", userHandler.Refresh)
+	e.POST("/signup", handlers.SignUpUser)
+	e.POST("/signupadmin", handlers.SignUpAdmin, customMiddleware.JWTMiddleware(&cfg))
+	e.POST("/login", handlers.Login)
+	e.POST("/refresh", handlers.Refresh)
 
 	if err := e.Start(":" + cfg.BlogServerPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("failed to start server", "error", err)

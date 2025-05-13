@@ -1,3 +1,4 @@
+// Package handler provides the HTTP request handlers for the endpoints
 package handler
 
 import (
@@ -12,6 +13,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// BlogService is an interface that defines the methods on Blog entity
 type BlogService interface {
 	Create(ctx context.Context, blog *model.Blog) error
 	Get(ctx context.Context, id uuid.UUID) (*model.Blog, error)
@@ -22,36 +24,27 @@ type BlogService interface {
 	GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error)
 }
 
+// UserService is an interface that defines the methods on User entity
 type UserService interface {
 	SignUp(ctx context.Context, user *model.User) error
 	Login(ctx context.Context, user *model.User) (*service.TokenPair, error)
 	Refresh(ctx context.Context, tokenPair service.TokenPair) (service.TokenPair, error)
 }
 
-type EntityBlog struct {
+// Handler is responsible for handling HTTP requests related to entities
+type Handler struct {
 	srvBlog  BlogService
-	validate *validator.Validate
-}
-
-type EntityUser struct {
 	srvUser  UserService
 	validate *validator.Validate
 }
 
-func NewEntityBlog(srvBlog BlogService, validate *validator.Validate) *EntityBlog {
-	return &EntityBlog{srvBlog: srvBlog, validate: validate}
+// NewHandler creates a new instance of the Handler struct
+func NewHandler(srvBlog BlogService, srvUser UserService, validate *validator.Validate) *Handler {
+	return &Handler{srvBlog: srvBlog, srvUser: srvUser, validate: validate}
 }
 
-func NewEntityUser(srvUser UserService, validate *validator.Validate) *EntityUser {
-	return &EntityUser{srvUser: srvUser, validate: validate}
-}
-
-type InputData struct {
-	Username string `json:"username" form:"username"`
-	Password string `json:"password" form:"password"`
-}
-
-func (h *EntityBlog) Create(c echo.Context) error {
+// Create processes the POST request to create a new blog
+func (h *Handler) Create(c echo.Context) error {
 	var newBlog model.Blog
 	newBlog.BlogID = uuid.New()
 	err := c.Bind(&newBlog)
@@ -80,7 +73,8 @@ func (h *EntityBlog) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, newBlog)
 }
 
-func (h *EntityBlog) Get(c echo.Context) error {
+// Get processes the GET request to retrieve a blog by ID
+func (h *Handler) Get(c echo.Context) error {
 	id := c.Param("id")
 	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
 	if err != nil {
@@ -100,7 +94,8 @@ func (h *EntityBlog) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, blog)
 }
 
-func (h *EntityBlog) Delete(c echo.Context) error {
+// Delete processes the DELETE request to delete a blog by ID
+func (h *Handler) Delete(c echo.Context) error {
 	id := c.Param("id")
 	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
 	if err != nil {
@@ -143,7 +138,8 @@ func (h *EntityBlog) Delete(c echo.Context) error {
 	return c.JSON(http.StatusNotFound, "Cannot delete blog with id: "+id)
 }
 
-func (h *EntityBlog) DeleteByUserID(c echo.Context) error {
+// DeleteByUserID processes the DELETE request to delete all blogs by ID of user
+func (h *Handler) DeleteByUserID(c echo.Context) error {
 	id := c.Param("id")
 	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
 	if err != nil {
@@ -173,7 +169,8 @@ func (h *EntityBlog) DeleteByUserID(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Deleted from user id: "+userID.String())
 }
 
-func (h *EntityBlog) Update(c echo.Context) error {
+// Update processes the PUT request to update an existing blog
+func (h *Handler) Update(c echo.Context) error {
 	var updBlog model.Blog
 	err := c.Bind(&updBlog)
 	if err != nil {
@@ -222,7 +219,8 @@ func (h *EntityBlog) Update(c echo.Context) error {
 	return c.JSON(http.StatusNotFound, "Cannot update blog with id: "+updBlog.BlogID.String())
 }
 
-func (h *EntityBlog) GetAll(c echo.Context) error {
+// GetAll processes the GET request to retrieve all blogs
+func (h *Handler) GetAll(c echo.Context) error {
 	blogs, err := h.srvBlog.GetAll(c.Request().Context())
 	if err != nil {
 		log.Errorf("srvBlog.GetAll - %v", err)
@@ -231,7 +229,8 @@ func (h *EntityBlog) GetAll(c echo.Context) error {
 	return c.JSON(http.StatusOK, blogs)
 }
 
-func (h *EntityBlog) GetByUserID(c echo.Context) error {
+// GetByUserID processes the GET request to retrieve all blogs of a certain user
+func (h *Handler) GetByUserID(c echo.Context) error {
 	userID, ok := c.Get("id").(uuid.UUID)
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
@@ -244,7 +243,14 @@ func (h *EntityBlog) GetByUserID(c echo.Context) error {
 	return c.JSON(http.StatusOK, blogs)
 }
 
-func (h *EntityUser) SignUpUser(c echo.Context) error {
+// InputData is a struct for binding login and password
+type InputData struct {
+	Username string `json:"username" form:"username"`
+	Password string `json:"password" form:"password"`
+}
+
+// SignUpUser processes the POST request to create a new user
+func (h *Handler) SignUpUser(c echo.Context) error {
 	requestData := &InputData{}
 	err := c.Bind(requestData)
 	if err != nil {
@@ -273,7 +279,8 @@ func (h *EntityUser) SignUpUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, "User created")
 }
 
-func (h *EntityUser) SignUpAdmin(c echo.Context) error {
+// SignUpAdmin processes the POST request to create a new admin
+func (h *Handler) SignUpAdmin(c echo.Context) error {
 	isAdmin, ok := c.Get("isAdmin").(bool)
 	if !ok || !isAdmin {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Admin role not found in context")
@@ -306,7 +313,8 @@ func (h *EntityUser) SignUpAdmin(c echo.Context) error {
 	return c.JSON(http.StatusCreated, "Admin created")
 }
 
-func (h *EntityUser) Login(c echo.Context) error {
+// Login processes the POST request to return a token pair based on the user's login fields
+func (h *Handler) Login(c echo.Context) error {
 	requestData := &InputData{}
 	err := c.Bind(requestData)
 	if err != nil {
@@ -336,7 +344,8 @@ func (h *EntityUser) Login(c echo.Context) error {
 	})
 }
 
-func (h *EntityUser) Refresh(c echo.Context) error {
+// Refresh processes POST request to create new tokens by old tokens
+func (h *Handler) Refresh(c echo.Context) error {
 	bindInfo := struct {
 		AccessToken  string `json:"accesstoken"`
 		RefreshToken string `json:"refreshtoken"`
