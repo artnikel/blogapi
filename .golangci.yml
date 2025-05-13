@@ -1,0 +1,84 @@
+linters-settings:
+  dupl:
+    threshold: 100
+  funlen:
+    lines: 100
+    statements: 50
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocritic:
+    enabled-tags:
+      - style
+      - diagnostic
+      - performance
+      - experimental
+      - opinionated
+    disabled-checks:
+      - captLocal
+  gocyclo:
+    min-complexity: 15
+  revive:
+    min-confidence: 0.8
+  govet:
+    fieldalignment:
+      suggest-new: true
+  lll:
+    line-length: 180
+  misspell:
+    locale: US
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - unused  
+    - errcheck
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - gofmt
+    - goimports
+    - revive
+    - mnd  
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - prealloc
+    - rowserrcheck
+    - copyloopvar 
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - whitespace
+
+issues:
+  max-same-issues: 0
+  exclude-use-default: false
+  exclude-rules:
+    - path: (.*?)_test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - gochecknoglobals
+        - funlen
+        - goconst
+        - lll
+
+run:
+  issues.exclude-dirs:
+    - vendor
+    - e2e
+    - test

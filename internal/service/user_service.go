@@ -199,4 +199,3 @@ func (s *UserService) GenerateJWTToken(expiration time.Duration, id uuid.UUID, i
 	}
 	return tokenString, nil
 }
-

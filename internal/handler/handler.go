@@ -140,7 +140,7 @@ func (h *EntityBlog) Delete(c echo.Context) error {
 			return c.JSON(http.StatusOK, "Deleted: "+id)
 		}
 	}
-	return c.JSON(http.StatusNotFound, "Not found blog with id: "+id)
+	return c.JSON(http.StatusNotFound, "Cannot delete blog with id: "+id)
 }
 
 func (h *EntityBlog) DeleteByUserID(c echo.Context) error {
@@ -219,7 +219,7 @@ func (h *EntityBlog) Update(c echo.Context) error {
 			return c.JSON(http.StatusOK, updBlog)
 		}
 	}
-	return c.JSON(http.StatusNotFound, "Not found blog with id: "+updBlog.BlogID.String())
+	return c.JSON(http.StatusNotFound, "Cannot update blog with id: "+updBlog.BlogID.String())
 }
 
 func (h *EntityBlog) GetAll(c echo.Context) error {

@@ -1,3 +1,4 @@
+// Package middleware ensures that only authenticated requests with valid tokens are passed to the handler.
 package middleware
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/labstack/echo"
 )
 
+// JWTMiddleware is a middleware function that checks the validity of the JWT token in the request header
 func JWTMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -61,6 +63,7 @@ func extractTokenFromHeader(authHeader string) string {
 	return parts[1]
 }
 
+// ValidateToken validates a JWT token and returns the claims if valid, otherwise an error.
 func ValidateToken(tokenString, secretKey string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
