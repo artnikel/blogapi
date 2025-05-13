@@ -1,3 +1,4 @@
+// Package service provides the business logic for blog application
 package service
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// BlogRepository is an interface that contains CRUD methods
 type BlogRepository interface {
 	Create(ctx context.Context, blog *model.Blog) error
 	Get(ctx context.Context, id uuid.UUID) (*model.Blog, error)
@@ -18,14 +20,17 @@ type BlogRepository interface {
 	GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error)
 }
 
+// BlogService contains Repository interface
 type BlogService struct {
 	blogRps BlogRepository
 }
 
+// NewBlogService accepts Repository object and returns an object of type *BlogService
 func NewBlogService(blogRps BlogRepository) *BlogService {
 	return &BlogService{blogRps: blogRps}
 }
 
+// Create is a method of BlogService that calls Create method of Repository
 func (s *BlogService) Create(ctx context.Context, blog *model.Blog) error {
 	err := s.blogRps.Create(ctx, blog)
 	if err != nil {
@@ -34,6 +39,7 @@ func (s *BlogService) Create(ctx context.Context, blog *model.Blog) error {
 	return nil
 }
 
+// Get is a method of BlogService that calls Get method of Repository
 func (s *BlogService) Get(ctx context.Context, id uuid.UUID) (*model.Blog, error) {
 	blog, err := s.blogRps.Get(ctx, id)
 	if err != nil {
@@ -42,6 +48,7 @@ func (s *BlogService) Get(ctx context.Context, id uuid.UUID) (*model.Blog, error
 	return blog, nil
 }
 
+// Delete is a method of BlogService that calls Delete method of Repository
 func (s *BlogService) Delete(ctx context.Context, id uuid.UUID) error {
 	err := s.blogRps.Delete(ctx, id)
 	if err != nil {
@@ -50,6 +57,7 @@ func (s *BlogService) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+// DeleteByUserID is a method of BlogService that calls DeleteByUserID method of Repository
 func (s *BlogService) DeleteByUserID(ctx context.Context, id uuid.UUID) error {
 	err := s.blogRps.DeleteByUserID(ctx, id)
 	if err != nil {
@@ -58,6 +66,7 @@ func (s *BlogService) DeleteByUserID(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+// Update is a method of BlogService that calls Update method of Repository
 func (s *BlogService) Update(ctx context.Context, blog *model.Blog) error {
 	err := s.blogRps.Update(ctx, blog)
 	if err != nil {
@@ -66,6 +75,7 @@ func (s *BlogService) Update(ctx context.Context, blog *model.Blog) error {
 	return nil
 }
 
+// GetAll is a method of BlogService that calls GetAll method of Repository
 func (s *BlogService) GetAll(ctx context.Context) ([]*model.Blog, error) {
 	blogs, err := s.blogRps.GetAll(ctx)
 	if err != nil {
@@ -74,6 +84,7 @@ func (s *BlogService) GetAll(ctx context.Context) ([]*model.Blog, error) {
 	return blogs, nil
 }
 
+// GetByUserID is a method of BlogService that calls GetByUserID method of Repository
 func (s *BlogService) GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error) {
 	blogs, err := s.blogRps.GetByUserID(ctx, id)
 	if err != nil {

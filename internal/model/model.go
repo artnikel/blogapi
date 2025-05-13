@@ -1,3 +1,4 @@
+// Package model provides the data models used in the application
 package model
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Blog entity
 type Blog struct {
 	BlogID      uuid.UUID `json:"blogid,omitempty" validate:"required"`
 	UserID      uuid.UUID `json:"userid,omitempty"`
@@ -14,6 +16,7 @@ type Blog struct {
 	ReleaseTime time.Time `json:"releasetime"`
 }
 
+// User entity
 type User struct {
 	ID           uuid.UUID `json:"id"`
 	Username     string    `json:"username" validate:"required,min=4,max=15"`

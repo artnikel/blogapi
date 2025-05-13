@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// SignUp creates a new user record in the db
 func (p *PgRepository) SignUp(ctx context.Context, user *model.User) error {
 	if user == nil {
 		return ErrNil
@@ -28,6 +29,7 @@ func (p *PgRepository) SignUp(ctx context.Context, user *model.User) error {
 	return nil
 }
 
+// GetDataByUsername returns data of user by username
 func (p *PgRepository) GetDataByUsername(ctx context.Context, username string) (id uuid.UUID, password []byte, admin bool, e error) {
 	var user model.User
 	user.Username = username
@@ -39,6 +41,7 @@ func (p *PgRepository) GetDataByUsername(ctx context.Context, username string) (
 	return user.ID, user.Password, user.Admin, nil
 }
 
+// GetRefreshTokenByID returns refreshToken from users table by id
 func (p *PgRepository) GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (string, error) {
 	var hash string
 	err := p.pool.QueryRow(ctx, "SELECT refreshToken FROM users WHERE id = $1", id).Scan(&hash)
@@ -48,6 +51,7 @@ func (p *PgRepository) GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (s
 	return hash, nil
 }
 
+// AddRefreshToken adds refreshToken to users table by id
 func (p *PgRepository) AddRefreshToken(ctx context.Context, user *model.User) error {
 	_, err := p.pool.Exec(ctx, "UPDATE users SET refreshtoken = $1 WHERE id = $2", user.RefreshToken, user.ID)
 	if err != nil {

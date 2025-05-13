@@ -1,5 +1,7 @@
+// Package config represents structure Config
 package config
 
+// Config is a structure of environment variables
 type Config struct {
 	BlogPostgresPath   string `env:"BLOG_POSTGRES_PATH"`
 	BlogTokenSignature string `env:"BLOG_TOKEN_SIGNATURE"`
