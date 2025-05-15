@@ -231,11 +231,18 @@ func (h *Handler) GetAll(c echo.Context) error {
 
 // GetByUserID processes the GET request to retrieve all blogs of a certain user
 func (h *Handler) GetByUserID(c echo.Context) error {
-	userID, ok := c.Get("id").(uuid.UUID)
-	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
+	id := c.Param("id")
+	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
+	if err != nil {
+		log.Errorf("validate.VarCtx error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to validate id")
 	}
-	blogs, err := h.srvBlog.GetByUserID(c.Request().Context(), userID)
+	uuidID, err := uuid.Parse(id)
+	if err != nil {
+		log.Errorf("uuid.Parse error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse id")
+	}
+	blogs, err := h.srvBlog.GetByUserID(c.Request().Context(), uuidID)
 	if err != nil {
 		log.Errorf("srvBlog.GetByUserID - %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Failed to get blogs by user id")

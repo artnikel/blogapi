@@ -70,21 +70,22 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func clearDB(t *testing.T) {
-	_, err := pgRepo.pool.Exec(context.Background(), "TRUNCATE users,blog RESTART IDENTITY")
-	require.NoError(t, err)
+var testBlog = model.Blog{
+	BlogID:  uuid.New(),
+	UserID:  uuid.New(),
+	Title:   "testtitle",
+	Content: "testcontent",
+}
+
+var testUser = model.User{
+	ID:       uuid.New(),
+	Username: "testuserrefresh",
+	Password: []byte("password"),
+	Admin:    false,
 }
 
 func Test_CreateBlog(t *testing.T) {
-	clearDB(t)
-
-	testBlog := model.Blog{
-		BlogID:  uuid.New(),
-		UserID:  uuid.New(),
-		Title:   "Test Blog",
-		Content: "This is a test blog",
-	}
-
+	testBlog.BlogID = uuid.New()
 	err := pgRepo.Create(context.Background(), &testBlog)
 	require.NoError(t, err)
 
@@ -95,15 +96,7 @@ func Test_CreateBlog(t *testing.T) {
 }
 
 func Test_CreateBlog_Duplicate(t *testing.T) {
-	clearDB(t)
-
-	testBlog := model.Blog{
-		BlogID:  uuid.New(),
-		UserID:  uuid.New(),
-		Title:   "Test Blog",
-		Content: "This is a test blog",
-	}
-
+	testBlog.BlogID = uuid.New()
 	err := pgRepo.Create(context.Background(), &testBlog)
 	require.NoError(t, err)
 
@@ -112,15 +105,7 @@ func Test_CreateBlog_Duplicate(t *testing.T) {
 }
 
 func Test_CreateBlog_ContextTimeout(t *testing.T) {
-	clearDB(t)
-
-	testBlog := model.Blog{
-		BlogID:  uuid.New(),
-		UserID:  uuid.New(),
-		Title:   "Test Blog Timeout",
-		Content: "This is a test blog for timeout",
-	}
-
+	testBlog.BlogID = uuid.New()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	time.Sleep(1 * time.Second)
 	defer cancel()
@@ -129,14 +114,13 @@ func Test_CreateBlog_ContextTimeout(t *testing.T) {
 }
 
 func Test_GetBlog_NotFound(t *testing.T) {
-	clearDB(t)
-
 	_, err := pgRepo.Get(context.Background(), uuid.New())
 	require.Error(t, err)
 }
 
 func Test_GetAllBlogs(t *testing.T) {
-	clearDB(t)
+	firstblogs, err := pgRepo.GetAll(context.Background())
+	require.NoError(t, err)
 
 	testBlog1 := model.Blog{
 		BlogID:  uuid.New(),
@@ -156,19 +140,11 @@ func Test_GetAllBlogs(t *testing.T) {
 
 	blogs, err := pgRepo.GetAll(context.Background())
 	require.NoError(t, err)
-	require.Len(t, blogs, 2)
+	require.Equal(t, len(blogs), len(firstblogs)+2)
 }
 
 func Test_UpdateBlog(t *testing.T) {
-	clearDB(t)
-
-	testBlog := model.Blog{
-		BlogID:  uuid.New(),
-		UserID:  uuid.New(),
-		Title:   "Original Title",
-		Content: "Original Content",
-	}
-
+	testBlog.BlogID = uuid.New()
 	_ = pgRepo.Create(context.Background(), &testBlog)
 
 	testBlog.Title = "Updated Title"
@@ -183,14 +159,7 @@ func Test_UpdateBlog(t *testing.T) {
 }
 
 func Test_DeleteBlog(t *testing.T) {
-	clearDB(t)
-
-	testBlog := model.Blog{
-		BlogID:  uuid.New(),
-		UserID:  uuid.New(),
-		Title:   "To be deleted",
-		Content: "This blog will be deleted",
-	}
+	testBlog.BlogID = uuid.New()
 
 	_ = pgRepo.Create(context.Background(), &testBlog)
 
@@ -202,22 +171,14 @@ func Test_DeleteBlog(t *testing.T) {
 }
 
 func Test_GetByUserID_NoBlogs(t *testing.T) {
-	clearDB(t)
-
 	blogs, err := pgRepo.GetByUserID(context.Background(), uuid.New())
 	require.NoError(t, err)
 	require.Empty(t, blogs)
 }
 
 func Test_SignUp(t *testing.T) {
-	clearDB(t)
-
-	testUser := model.User{
-		ID:       uuid.New(),
-		Username: "testuser",
-		Password: []byte("password"),
-		Admin:    false,
-	}
+	testUser.Username = "testusername"
+	testUser.ID = uuid.New()
 
 	err := pgRepo.SignUp(context.Background(), &testUser)
 	require.NoError(t, err)
@@ -230,14 +191,8 @@ func Test_SignUp(t *testing.T) {
 }
 
 func Test_SignUp_ExistingUser(t *testing.T) {
-	clearDB(t)
-
-	testUser := model.User{
-		ID:       uuid.New(),
-		Username: "testuser",
-		Password: []byte("password"),
-		Admin:    false,
-	}
+	testUser.Username = "testusername2"
+	testUser.ID = uuid.New()
 
 	err := pgRepo.SignUp(context.Background(), &testUser)
 	require.NoError(t, err)
@@ -248,32 +203,22 @@ func Test_SignUp_ExistingUser(t *testing.T) {
 }
 
 func Test_SignUp_NilUser(t *testing.T) {
-	clearDB(t)
-
 	err := pgRepo.SignUp(context.Background(), nil)
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrNil)
 }
 
 func Test_GetDataByUsername_NotFound(t *testing.T) {
-	clearDB(t)
-
 	_, _, _, err := pgRepo.GetDataByUsername(context.Background(), "nonexistent")
 	require.Error(t, err)
 }
 
 func Test_GetRefreshTokenByID(t *testing.T) {
-	clearDB(t)
-
-	testUser := model.User{
-		ID:           uuid.New(),
-		Username:     "testuser",
-		Password:     []byte("password"),
-		Admin:        false,
-		RefreshToken: "test_refresh_token",
-	}
+	testUser.Username = "testusername3"
+	testUser.ID = uuid.New()
 
 	_ = pgRepo.SignUp(context.Background(), &testUser)
+	testUser.RefreshToken = "test_refresh_token"
 	_ = pgRepo.AddRefreshToken(context.Background(), &testUser)
 
 	storedToken, err := pgRepo.GetRefreshTokenByID(context.Background(), testUser.ID)
@@ -282,21 +227,12 @@ func Test_GetRefreshTokenByID(t *testing.T) {
 }
 
 func Test_GetRefreshTokenByID_NotFound(t *testing.T) {
-	clearDB(t)
-
 	_, err := pgRepo.GetRefreshTokenByID(context.Background(), uuid.New())
 	require.Error(t, err)
 }
 
 func Test_AddRefreshToken(t *testing.T) {
-	clearDB(t)
-
-	testUser := model.User{
-		ID:       uuid.New(),
-		Username: "testuser",
-		Password: []byte("password"),
-		Admin:    false,
-	}
+	testUser.Username = "testusername4"
 
 	_ = pgRepo.SignUp(context.Background(), &testUser)
 
