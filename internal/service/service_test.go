@@ -26,7 +26,7 @@ func TestUserService_SignUp(t *testing.T) {
 	mockRepo.EXPECT().
 		SignUp(mock.Anything, mock.AnythingOfType("*model.User")).
 		Return(nil).
-		Run(func(ctx context.Context, u *model.User) {
+		Run(func(_ context.Context, u *model.User) {
 			require.NotEqual(t, []byte("password123"), u.Password)
 		})
 
@@ -55,7 +55,7 @@ func TestUserService_Login(t *testing.T) {
 	mockRepo.EXPECT().
 		AddRefreshToken(mock.Anything, mock.AnythingOfType("*model.User")).
 		Return(nil).
-		Run(func(ctx context.Context, u *model.User) {
+		Run(func(_ context.Context, u *model.User) {
 			require.NotEmpty(t, u.RefreshToken)
 		})
 
@@ -103,7 +103,7 @@ func TestUserService_Refresh(t *testing.T) {
 	require.NoError(t, err)
 
 	sum := sha256.Sum256([]byte(tokenPair.RefreshToken))
-	hashedRefreshToken, err := svc.HashPassword(sum[:]) 
+	hashedRefreshToken, err := svc.HashPassword(sum[:])
 	require.NoError(t, err)
 
 	mockRepo.EXPECT().
@@ -113,7 +113,7 @@ func TestUserService_Refresh(t *testing.T) {
 	mockRepo.EXPECT().
 		AddRefreshToken(mock.Anything, mock.AnythingOfType("*model.User")).
 		Return(nil).
-		Run(func(ctx context.Context, u *model.User) {
+		Run(func(_ context.Context, u *model.User) {
 			require.NotEmpty(t, u.RefreshToken)
 		})
 
@@ -142,4 +142,3 @@ func TestUserService_Refresh_InvalidToken(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "CheckPasswordHash error")
 }
-
