@@ -9,6 +9,7 @@ import (
 
 	"github.com/artnikel/blogapi/internal/model"
 	"github.com/artnikel/blogapi/internal/service"
+	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -37,6 +38,52 @@ type MockUserService_Expecter struct {
 
 func (_m *MockUserService) EXPECT() *MockUserService_Expecter {
 	return &MockUserService_Expecter{mock: &_m.Mock}
+}
+
+// DeleteUserByID provides a mock function for the type MockUserService
+func (_mock *MockUserService) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteUserByID")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockUserService_DeleteUserByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteUserByID'
+type MockUserService_DeleteUserByID_Call struct {
+	*mock.Call
+}
+
+// DeleteUserByID is a helper method to define mock.On call
+//   - ctx
+//   - id
+func (_e *MockUserService_Expecter) DeleteUserByID(ctx interface{}, id interface{}) *MockUserService_DeleteUserByID_Call {
+	return &MockUserService_DeleteUserByID_Call{Call: _e.mock.On("DeleteUserByID", ctx, id)}
+}
+
+func (_c *MockUserService_DeleteUserByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockUserService_DeleteUserByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *MockUserService_DeleteUserByID_Call) Return(err error) *MockUserService_DeleteUserByID_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockUserService_DeleteUserByID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockUserService_DeleteUserByID_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Login provides a mock function for the type MockUserService

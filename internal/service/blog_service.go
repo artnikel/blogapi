@@ -14,7 +14,7 @@ type BlogRepository interface {
 	Create(ctx context.Context, blog *model.Blog) error
 	Get(ctx context.Context, id uuid.UUID) (*model.Blog, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	DeleteByUserID(ctx context.Context, id uuid.UUID) error
+	DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error
 	Update(ctx context.Context, blog *model.Blog) error
 	GetAll(ctx context.Context) ([]*model.Blog, error)
 	GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error)
@@ -57,11 +57,11 @@ func (s *BlogService) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// DeleteByUserID is a method of BlogService that calls DeleteByUserID method of Repository
-func (s *BlogService) DeleteByUserID(ctx context.Context, id uuid.UUID) error {
-	err := s.blogRps.DeleteByUserID(ctx, id)
+// DeleteBlogsByUserID is a method of BlogService that calls DeleteBlogsByUserID method of Repository
+func (s *BlogService) DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error {
+	err := s.blogRps.DeleteBlogsByUserID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("blogRps.DeleteByUserID - %w", err)
+		return fmt.Errorf("blogRps.DeleteBlogsByUserID - %w", err)
 	}
 	return nil
 }

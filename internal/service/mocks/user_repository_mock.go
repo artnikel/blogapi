@@ -85,6 +85,52 @@ func (_c *MockUserRepository_AddRefreshToken_Call) RunAndReturn(run func(ctx con
 	return _c
 }
 
+// DeleteUserByID provides a mock function for the type MockUserRepository
+func (_mock *MockUserRepository) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteUserByID")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockUserRepository_DeleteUserByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteUserByID'
+type MockUserRepository_DeleteUserByID_Call struct {
+	*mock.Call
+}
+
+// DeleteUserByID is a helper method to define mock.On call
+//   - ctx
+//   - id
+func (_e *MockUserRepository_Expecter) DeleteUserByID(ctx interface{}, id interface{}) *MockUserRepository_DeleteUserByID_Call {
+	return &MockUserRepository_DeleteUserByID_Call{Call: _e.mock.On("DeleteUserByID", ctx, id)}
+}
+
+func (_c *MockUserRepository_DeleteUserByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockUserRepository_DeleteUserByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *MockUserRepository_DeleteUserByID_Call) Return(err error) *MockUserRepository_DeleteUserByID_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockUserRepository_DeleteUserByID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockUserRepository_DeleteUserByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetDataByUsername provides a mock function for the type MockUserRepository
 func (_mock *MockUserRepository) GetDataByUsername(ctx context.Context, username string) (uuid.UUID, []byte, bool, error) {
 	ret := _mock.Called(ctx, username)

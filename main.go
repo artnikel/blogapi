@@ -64,7 +64,7 @@ func main() {
 	e.POST("/blog", handlers.Create, customMiddleware.JWTMiddleware(&cfg))
 	e.GET("/blog/:id", handlers.Get, customMiddleware.JWTMiddleware(&cfg))
 	e.DELETE("/blog/:id", handlers.Delete, customMiddleware.JWTMiddleware(&cfg))
-	e.DELETE("/blogs/user/:id", handlers.DeleteByUserID, customMiddleware.JWTMiddleware(&cfg))
+	e.DELETE("/blogs/user/:id", handlers.DeleteBlogsByUserID, customMiddleware.JWTMiddleware(&cfg))
 	e.PUT("/blog", handlers.Update, customMiddleware.JWTMiddleware(&cfg))
 	e.GET("/blogs", handlers.GetAll, customMiddleware.JWTMiddleware(&cfg))
 	e.GET("/blogs/user/:id", handlers.GetByUserID, customMiddleware.JWTMiddleware(&cfg))
@@ -73,6 +73,7 @@ func main() {
 	e.POST("/signupadmin", handlers.SignUpAdmin, customMiddleware.JWTMiddleware(&cfg))
 	e.POST("/login", handlers.Login)
 	e.POST("/refresh", handlers.Refresh)
+	e.DELETE("/user/:id", handlers.DeleteUserByID, customMiddleware.JWTMiddleware(&cfg))
 
 	if err := e.Start(":" + cfg.BlogServerPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("failed to start server", "error", err)

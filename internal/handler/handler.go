@@ -18,7 +18,7 @@ type BlogService interface {
 	Create(ctx context.Context, blog *model.Blog) error
 	Get(ctx context.Context, id uuid.UUID) (*model.Blog, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	DeleteByUserID(ctx context.Context, id uuid.UUID) error
+	DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error
 	Update(ctx context.Context, blog *model.Blog) error
 	GetAll(ctx context.Context) ([]*model.Blog, error)
 	GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error)
@@ -29,6 +29,7 @@ type UserService interface {
 	SignUp(ctx context.Context, user *model.User) error
 	Login(ctx context.Context, user *model.User) (*service.TokenPair, error)
 	Refresh(ctx context.Context, tokenPair service.TokenPair) (service.TokenPair, error)
+	DeleteUserByID(ctx context.Context, id uuid.UUID) error
 }
 
 // Handler is responsible for handling HTTP requests related to entities
@@ -114,7 +115,7 @@ func (h *Handler) Delete(c echo.Context) error {
 			log.WithField("ID", uuidID).Errorf("srvBlog.Delete - %v", err)
 			return echo.NewHTTPError(http.StatusBadRequest, "Failed to delete blog")
 		}
-		return c.JSON(http.StatusOK, "Deleted: "+id)
+		return c.JSON(http.StatusOK, "Successfully deleted blog: "+id)
 	}
 	userID, ok := c.Get("id").(uuid.UUID)
 	if !ok {
@@ -132,14 +133,14 @@ func (h *Handler) Delete(c echo.Context) error {
 				log.WithField("ID", uuidID).Errorf("srvBlog.Delete - %v", err)
 				return echo.NewHTTPError(http.StatusBadRequest, "Failed to delete blog")
 			}
-			return c.JSON(http.StatusOK, "Deleted: "+id)
+			return c.JSON(http.StatusOK, "Successfully deleted blog: "+id)
 		}
 	}
 	return c.JSON(http.StatusNotFound, "Cannot delete blog with id: "+id)
 }
 
-// DeleteByUserID processes the DELETE request to delete all blogs by ID of user
-func (h *Handler) DeleteByUserID(c echo.Context) error {
+// DeleteBlogsByUserID processes the DELETE request to delete all blogs by ID of user
+func (h *Handler) DeleteBlogsByUserID(c echo.Context) error {
 	id := c.Param("id")
 	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
 	if err != nil {
@@ -161,12 +162,12 @@ func (h *Handler) DeleteByUserID(c echo.Context) error {
 			return c.JSON(http.StatusForbidden, "You need the admin role to delete someone else's blog")
 		}
 	}
-	err = h.srvBlog.DeleteByUserID(c.Request().Context(), userID)
+	err = h.srvBlog.DeleteBlogsByUserID(c.Request().Context(), userID)
 	if err != nil {
-		log.WithField("ID", userID).Errorf("srvBlog.DeleteByUserID - %v", err)
+		log.WithField("ID", userID).Errorf("srvBlog.DeleteBlogsByUserID - %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Failed to delete blogs")
 	}
-	return c.JSON(http.StatusOK, "Deleted from user id: "+userID.String())
+	return c.JSON(http.StatusOK, "Blogs has been successfully deleted from user id: "+userID.String())
 }
 
 // Update processes the PUT request to update an existing blog
@@ -290,7 +291,7 @@ func (h *Handler) SignUpUser(c echo.Context) error {
 func (h *Handler) SignUpAdmin(c echo.Context) error {
 	isAdmin, ok := c.Get("isAdmin").(bool)
 	if !ok || !isAdmin {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Admin role not found in context")
+		return echo.NewHTTPError(http.StatusForbidden, "Admin role not found in context")
 	}
 	requestData := &InputData{}
 	err := c.Bind(requestData)
@@ -377,4 +378,29 @@ func (h *Handler) Refresh(c echo.Context) error {
 		"Access Token : ":  tokenPair.AccessToken,
 		"Refresh Token : ": tokenPair.RefreshToken,
 	})
+}
+
+// DeleteUserByID processes DELETE request to remove user by its ID
+func (h *Handler) DeleteUserByID(c echo.Context) error {
+	isAdmin, ok := c.Get("isAdmin").(bool)
+	if !ok || !isAdmin {
+		return echo.NewHTTPError(http.StatusForbidden, "You need the admin role to delete user")
+	}
+	id := c.Param("id")
+	err := h.validate.VarCtx(c.Request().Context(), id, "required,uuid")
+	if err != nil {
+		log.Errorf("validate.VarCtx error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to validate id")
+	}
+	uuidID, err := uuid.Parse(id)
+	if err != nil {
+		log.Errorf("uuid.Parse error: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse id")
+	}
+	err = h.srvUser.DeleteUserByID(c.Request().Context(), uuidID)
+	if err != nil {
+		log.WithField("ID", uuidID).Errorf("srvBlog.DeleteUserByID - %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to delete user")
+	}
+	return c.JSON(http.StatusOK, "User has been successfully deleted: "+uuidID.String())
 }
