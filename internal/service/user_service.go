@@ -22,6 +22,7 @@ type UserRepository interface {
 	GetDataByUsername(ctx context.Context, username string) (uuid.UUID, []byte, bool, error)
 	AddRefreshToken(ctx context.Context, user *model.User) error
 	GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (string, error)
+	DeleteUserByID(ctx context.Context, id uuid.UUID) error
 }
 
 // UserService contains UserRepository interface
@@ -123,6 +124,15 @@ func (s *UserService) Refresh(ctx context.Context, tokenPair TokenPair) (TokenPa
 		return TokenPair{}, fmt.Errorf("rpsUser.AddRefreshToken - %w", err)
 	}
 	return tokenPair, nil
+}
+
+// DeleteUserByID is a method of UserService that calls  method of Repository
+func (s *UserService) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	err := s.rpsUser.DeleteUserByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("rpsUser.DeleteUserByID - %w", err)
+	}
+	return nil
 }
 
 // TokensIDCompare compares IDs from refresh and access token for being equal

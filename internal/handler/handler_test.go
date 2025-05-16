@@ -109,7 +109,7 @@ func Test_Delete_AsAdmin(t *testing.T) {
 	err := h.Delete(c)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, rec.Body.String(), "Deleted: "+id.String())
+	require.Contains(t, rec.Body.String(), "Successfully deleted blog: "+id.String())
 
 	mockService.AssertExpectations(t)
 }
@@ -142,7 +142,7 @@ func Test_Delete_AsUserOwnBlog(t *testing.T) {
 	err := h.Delete(c)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, rec.Body.String(), "Deleted: "+blogID.String())
+	require.Contains(t, rec.Body.String(), "Successfully deleted blog: "+blogID.String())
 
 	mockService.AssertExpectations(t)
 }
@@ -175,14 +175,14 @@ func Test_Delete_NotOwner(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func Test_DeleteByUserID_SameUser(t *testing.T) {
+func Test_DeleteBlogsByUserID_SameUser(t *testing.T) {
 	mockService := new(mocks.MockBlogService)
 	validate := validator.New()
 	h := NewHandler(mockService, nil, validate)
 
 	userID := uuid.New()
 
-	mockService.On("DeleteByUserID", mock.Anything, userID).Return(nil)
+	mockService.On("DeleteBlogsByUserID", mock.Anything, userID).Return(nil)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodDelete, "/blogs/user/"+userID.String(), http.NoBody)
@@ -192,15 +192,15 @@ func Test_DeleteByUserID_SameUser(t *testing.T) {
 	c.SetParamValues(userID.String())
 	c.Set("id", userID)
 
-	err := h.DeleteByUserID(c)
+	err := h.DeleteBlogsByUserID(c)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, rec.Body.String(), "Deleted from user id: "+userID.String())
+	require.Contains(t, rec.Body.String(), "Blogs has been successfully deleted from user id: "+userID.String())
 
 	mockService.AssertExpectations(t)
 }
 
-func Test_DeleteByUserID_Forbidden(t *testing.T) {
+func Test_DeleteBlogsByUserID_Forbidden(t *testing.T) {
 	mockService := new(mocks.MockBlogService)
 	validate := validator.New()
 	h := NewHandler(mockService, nil, validate)
@@ -217,7 +217,7 @@ func Test_DeleteByUserID_Forbidden(t *testing.T) {
 	c.Set("id", userID)
 	c.Set("isAdmin", false)
 
-	err := h.DeleteByUserID(c)
+	err := h.DeleteBlogsByUserID(c)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusForbidden, rec.Code)
 	require.Contains(t, rec.Body.String(), "You need the admin role")
@@ -537,6 +537,53 @@ func Test_Refresh(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "newaccesstoken", response["Access Token : "])
 	require.Equal(t, "newrefreshtoken", response["Refresh Token : "])
+
+	mockService.AssertExpectations(t)
+}
+
+func Test_DeleteUserByID(t *testing.T) {
+	mockService := new(mocks.MockUserService)
+	validate := validator.New()
+	h := NewHandler(nil, mockService, validate)
+
+	userID := uuid.New()
+
+	mockService.On("DeleteUserByID", mock.Anything, userID).Return(nil)
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodDelete, "/user/"+userID.String(), http.NoBody)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(userID.String())
+	c.Set("id", userID)
+	c.Set("isAdmin", true)
+
+	err := h.DeleteUserByID(c)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Contains(t, rec.Body.String(), "User has been successfully deleted: "+userID.String())
+
+	mockService.AssertExpectations(t)
+}
+
+func Test_DeleteUserByID_Forbidden(t *testing.T) {
+	mockService := new(mocks.MockUserService)
+	validate := validator.New()
+	h := NewHandler(nil, mockService, validate)
+	userID := uuid.New()
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodDelete, "/user/"+userID.String(), http.NoBody)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(userID.String())
+	c.Set("id", userID)
+	c.Set("isAdmin", false)
+
+	err := h.DeleteUserByID(c)
+	require.Error(t, err)
 
 	mockService.AssertExpectations(t)
 }

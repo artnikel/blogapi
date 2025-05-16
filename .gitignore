@@ -1,3 +1,2 @@
 .vscode/
-internal/service/.mockery.yml
-internal/handler/.mockery.yml
+**/*.yml

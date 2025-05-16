@@ -59,3 +59,15 @@ func (p *PgRepository) AddRefreshToken(ctx context.Context, user *model.User) er
 	}
 	return nil
 }
+
+// DeleteUserByID delete user record in the db by its ID
+func (p *PgRepository) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	result, err := p.pool.Exec(ctx, "DELETE FROM users WHERE id = $1 AND admin = false", id)
+	if err != nil {
+		return fmt.Errorf("error in method p.pool.Exec(): %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no user found with the given ID")
+	}
+	return nil
+}

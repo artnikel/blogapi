@@ -52,8 +52,8 @@ func (p *PgRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// DeleteByUserID removes blog records from the db based on the user ID
-func (p *PgRepository) DeleteByUserID(ctx context.Context, id uuid.UUID) error {
+// DeleteBlogsByUserID removes blog records from the db based on the user ID
+func (p *PgRepository) DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error {
 	_, err := p.pool.Exec(ctx, "DELETE FROM blog WHERE userid = $1", id)
 	if err != nil {
 		return fmt.Errorf("error in method p.pool.Exec(): %w", err)

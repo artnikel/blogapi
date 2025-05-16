@@ -142,3 +142,17 @@ func TestUserService_Refresh_InvalidToken(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "CheckPasswordHash error")
 }
+
+func TestUserService_DeleteUserByID(t *testing.T) {
+	mockRepo := mocks.NewMockUserRepository(t)
+	cfg := &config.Config{BlogTokenSignature: "secret"}
+	svc := NewUserService(mockRepo, cfg)
+	userID := uuid.New()
+
+	mockRepo.EXPECT().
+		DeleteUserByID(mock.Anything, userID).
+		Return(nil)
+
+	err := svc.DeleteUserByID(context.Background(), userID)
+	require.NoError(t, err)
+}

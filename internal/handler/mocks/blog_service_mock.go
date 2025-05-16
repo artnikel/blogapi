@@ -131,12 +131,12 @@ func (_c *MockBlogService_Delete_Call) RunAndReturn(run func(ctx context.Context
 	return _c
 }
 
-// DeleteByUserID provides a mock function for the type MockBlogService
-func (_mock *MockBlogService) DeleteByUserID(ctx context.Context, id uuid.UUID) error {
+// DeleteBlogsByUserID provides a mock function for the type MockBlogService
+func (_mock *MockBlogService) DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DeleteByUserID")
+		panic("no return value specified for DeleteBlogsByUserID")
 	}
 
 	var r0 error
@@ -148,31 +148,31 @@ func (_mock *MockBlogService) DeleteByUserID(ctx context.Context, id uuid.UUID) 
 	return r0
 }
 
-// MockBlogService_DeleteByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteByUserID'
-type MockBlogService_DeleteByUserID_Call struct {
+// MockBlogService_DeleteBlogsByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteBlogsByUserID'
+type MockBlogService_DeleteBlogsByUserID_Call struct {
 	*mock.Call
 }
 
-// DeleteByUserID is a helper method to define mock.On call
+// DeleteBlogsByUserID is a helper method to define mock.On call
 //   - ctx
 //   - id
-func (_e *MockBlogService_Expecter) DeleteByUserID(ctx interface{}, id interface{}) *MockBlogService_DeleteByUserID_Call {
-	return &MockBlogService_DeleteByUserID_Call{Call: _e.mock.On("DeleteByUserID", ctx, id)}
+func (_e *MockBlogService_Expecter) DeleteBlogsByUserID(ctx interface{}, id interface{}) *MockBlogService_DeleteBlogsByUserID_Call {
+	return &MockBlogService_DeleteBlogsByUserID_Call{Call: _e.mock.On("DeleteBlogsByUserID", ctx, id)}
 }
 
-func (_c *MockBlogService_DeleteByUserID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockBlogService_DeleteByUserID_Call {
+func (_c *MockBlogService_DeleteBlogsByUserID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockBlogService_DeleteBlogsByUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *MockBlogService_DeleteByUserID_Call) Return(err error) *MockBlogService_DeleteByUserID_Call {
+func (_c *MockBlogService_DeleteBlogsByUserID_Call) Return(err error) *MockBlogService_DeleteBlogsByUserID_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockBlogService_DeleteByUserID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockBlogService_DeleteByUserID_Call {
+func (_c *MockBlogService_DeleteBlogsByUserID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockBlogService_DeleteBlogsByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }

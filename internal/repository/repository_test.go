@@ -85,22 +85,24 @@ var testUser = model.User{
 }
 
 func Test_CreateBlog(t *testing.T) {
+	ctx := context.Background()
 	testBlog.BlogID = uuid.New()
-	err := pgRepo.Create(context.Background(), &testBlog)
+	err := pgRepo.Create(ctx, &testBlog)
 	require.NoError(t, err)
 
-	fetchedBlog, err := pgRepo.Get(context.Background(), testBlog.BlogID)
+	fetchedBlog, err := pgRepo.Get(ctx, testBlog.BlogID)
 	require.NoError(t, err)
 	require.Equal(t, testBlog.Title, fetchedBlog.Title)
 	require.Equal(t, testBlog.Content, fetchedBlog.Content)
 }
 
 func Test_CreateBlog_Duplicate(t *testing.T) {
+	ctx := context.Background()
 	testBlog.BlogID = uuid.New()
-	err := pgRepo.Create(context.Background(), &testBlog)
+	err := pgRepo.Create(ctx, &testBlog)
 	require.NoError(t, err)
 
-	err = pgRepo.Create(context.Background(), &testBlog)
+	err = pgRepo.Create(ctx, &testBlog)
 	require.Error(t, err)
 }
 
@@ -119,7 +121,8 @@ func Test_GetBlog_NotFound(t *testing.T) {
 }
 
 func Test_GetAllBlogs(t *testing.T) {
-	firstblogs, err := pgRepo.GetAll(context.Background())
+	ctx := context.Background()
+	firstblogs, err := pgRepo.GetAll(ctx)
 	require.NoError(t, err)
 
 	testBlog1 := model.Blog{
@@ -135,38 +138,53 @@ func Test_GetAllBlogs(t *testing.T) {
 		Content: "Content of second blog",
 	}
 
-	_ = pgRepo.Create(context.Background(), &testBlog1)
-	_ = pgRepo.Create(context.Background(), &testBlog2)
+	_ = pgRepo.Create(ctx, &testBlog1)
+	_ = pgRepo.Create(ctx, &testBlog2)
 
-	blogs, err := pgRepo.GetAll(context.Background())
+	blogs, err := pgRepo.GetAll(ctx)
 	require.NoError(t, err)
 	require.Equal(t, len(blogs), len(firstblogs)+2)
 }
 
 func Test_UpdateBlog(t *testing.T) {
+	ctx := context.Background()
 	testBlog.BlogID = uuid.New()
-	_ = pgRepo.Create(context.Background(), &testBlog)
+	_ = pgRepo.Create(ctx, &testBlog)
 
 	testBlog.Title = "Updated Title"
 	testBlog.Content = "Updated Content"
-	err := pgRepo.Update(context.Background(), &testBlog)
+	err := pgRepo.Update(ctx, &testBlog)
 	require.NoError(t, err)
 
-	updatedBlog, err := pgRepo.Get(context.Background(), testBlog.BlogID)
+	updatedBlog, err := pgRepo.Get(ctx, testBlog.BlogID)
 	require.NoError(t, err)
 	require.Equal(t, "Updated Title", updatedBlog.Title)
 	require.Equal(t, "Updated Content", updatedBlog.Content)
 }
 
 func Test_DeleteBlog(t *testing.T) {
+	ctx := context.Background()
 	testBlog.BlogID = uuid.New()
 
-	_ = pgRepo.Create(context.Background(), &testBlog)
+	_ = pgRepo.Create(ctx, &testBlog)
 
-	err := pgRepo.Delete(context.Background(), testBlog.BlogID)
+	err := pgRepo.Delete(ctx, testBlog.BlogID)
 	require.NoError(t, err)
 
-	_, err = pgRepo.Get(context.Background(), testBlog.BlogID)
+	_, err = pgRepo.Get(ctx, testBlog.BlogID)
+	require.Error(t, err)
+}
+
+func Test_DeleteBlogsByUserID(t *testing.T) {
+	ctx := context.Background()
+	testBlog.BlogID = uuid.New()
+
+	_ = pgRepo.Create(ctx, &testBlog)
+
+	err := pgRepo.DeleteBlogsByUserID(ctx, testBlog.UserID)
+	require.NoError(t, err)
+
+	_, err = pgRepo.Get(ctx, testBlog.BlogID)
 	require.Error(t, err)
 }
 
@@ -177,13 +195,14 @@ func Test_GetByUserID_NoBlogs(t *testing.T) {
 }
 
 func Test_SignUp(t *testing.T) {
+	ctx := context.Background()
 	testUser.Username = "testusername"
 	testUser.ID = uuid.New()
 
-	err := pgRepo.SignUp(context.Background(), &testUser)
+	err := pgRepo.SignUp(ctx, &testUser)
 	require.NoError(t, err)
 
-	id, password, admin, err := pgRepo.GetDataByUsername(context.Background(), testUser.Username)
+	id, password, admin, err := pgRepo.GetDataByUsername(ctx, testUser.Username)
 	require.NoError(t, err)
 	require.Equal(t, testUser.ID, id)
 	require.Equal(t, testUser.Password, password)
@@ -191,13 +210,14 @@ func Test_SignUp(t *testing.T) {
 }
 
 func Test_SignUp_ExistingUser(t *testing.T) {
+	ctx := context.Background()
 	testUser.Username = "testusername2"
 	testUser.ID = uuid.New()
 
-	err := pgRepo.SignUp(context.Background(), &testUser)
+	err := pgRepo.SignUp(ctx, &testUser)
 	require.NoError(t, err)
 
-	err = pgRepo.SignUp(context.Background(), &testUser)
+	err = pgRepo.SignUp(ctx, &testUser)
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrExist)
 }
@@ -214,14 +234,15 @@ func Test_GetDataByUsername_NotFound(t *testing.T) {
 }
 
 func Test_GetRefreshTokenByID(t *testing.T) {
+	ctx := context.Background()
 	testUser.Username = "testusername3"
 	testUser.ID = uuid.New()
 
-	_ = pgRepo.SignUp(context.Background(), &testUser)
+	_ = pgRepo.SignUp(ctx, &testUser)
 	testUser.RefreshToken = "test_refresh_token"
-	_ = pgRepo.AddRefreshToken(context.Background(), &testUser)
+	_ = pgRepo.AddRefreshToken(ctx, &testUser)
 
-	storedToken, err := pgRepo.GetRefreshTokenByID(context.Background(), testUser.ID)
+	storedToken, err := pgRepo.GetRefreshTokenByID(ctx, testUser.ID)
 	require.NoError(t, err)
 	require.Equal(t, "test_refresh_token", storedToken)
 }
@@ -232,16 +253,55 @@ func Test_GetRefreshTokenByID_NotFound(t *testing.T) {
 }
 
 func Test_AddRefreshToken(t *testing.T) {
+	ctx := context.Background()
 	testUser.Username = "testusername4"
 
-	_ = pgRepo.SignUp(context.Background(), &testUser)
+	_ = pgRepo.SignUp(ctx, &testUser)
 
 	newToken := "new_refresh_token"
 	testUser.RefreshToken = newToken
-	err := pgRepo.AddRefreshToken(context.Background(), &testUser)
+	err := pgRepo.AddRefreshToken(ctx, &testUser)
 	require.NoError(t, err)
 
-	storedToken, err := pgRepo.GetRefreshTokenByID(context.Background(), testUser.ID)
+	storedToken, err := pgRepo.GetRefreshTokenByID(ctx, testUser.ID)
 	require.NoError(t, err)
 	require.Equal(t, newToken, storedToken)
+}
+
+func Test_DeleteUserByID(t *testing.T) {
+	ctx := context.Background()
+
+	testUser.Username = "testusername5"
+	testUser.ID = uuid.New()
+
+	err := pgRepo.SignUp(ctx, &testUser)
+	require.NoError(t, err)
+
+	err = pgRepo.DeleteUserByID(ctx, testUser.ID)
+	require.NoError(t, err)
+
+	_, _, _, err = pgRepo.GetDataByUsername(ctx, testUser.Username)
+	require.Error(t, err)
+}
+
+func Test_DeleteUserByID_AdminUser(t *testing.T) {
+	ctx := context.Background()
+	testUser.Username = "testusername6"
+	testUser.ID = uuid.New()
+	testUser.Admin = true
+
+	err := pgRepo.SignUp(ctx, &testUser)
+	require.NoError(t, err)
+
+	err = pgRepo.DeleteUserByID(ctx, testUser.ID)
+	require.Error(t, err)
+
+	id, _, _, err := pgRepo.GetDataByUsername(ctx, testUser.Username)
+	require.NoError(t, err)
+	require.Equal(t, testUser.ID, id)
+}
+
+func Test_DeleteUserByID_UserNotFound(t *testing.T) {
+	err := pgRepo.DeleteUserByID(context.Background(), uuid.New())
+	require.Error(t, err)
 }
