@@ -16,7 +16,8 @@ type BlogRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error
 	Update(ctx context.Context, blog *model.Blog) error
-	GetAll(ctx context.Context) ([]*model.Blog, error)
+	Count(ctx context.Context) (int, error)
+	GetAll(ctx context.Context, limit, offset int) ([]*model.Blog, error)
 	GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error)
 }
 
@@ -76,12 +77,21 @@ func (s *BlogService) Update(ctx context.Context, blog *model.Blog) error {
 }
 
 // GetAll is a method of BlogService that calls GetAll method of Repository
-func (s *BlogService) GetAll(ctx context.Context) ([]*model.Blog, error) {
-	blogs, err := s.blogRps.GetAll(ctx)
+func (s *BlogService) GetAll(ctx context.Context, limit, offset int) (*model.BlogListResponse, error) {
+	count, err := s.blogRps.Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("blogRps.Count - %w", err)
+	}
+
+	blogs, err := s.blogRps.GetAll(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("blogRps.GetAll - %w", err)
 	}
-	return blogs, nil
+
+	return &model.BlogListResponse{
+		Blogs: blogs,
+		Count: count,
+	}, nil
 }
 
 // GetByUserID is a method of BlogService that calls GetByUserID method of Repository

@@ -120,9 +120,43 @@ func Test_GetBlog_NotFound(t *testing.T) {
 	require.Error(t, err)
 }
 
-func Test_GetAllBlogs(t *testing.T) {
+func Test_Count(t *testing.T) {
 	ctx := context.Background()
-	firstblogs, err := pgRepo.GetAll(ctx)
+
+	initialCount, err := pgRepo.Count(ctx)
+	require.NoError(t, err)
+
+	testBlog1 := model.Blog{
+		BlogID:  uuid.New(),
+		UserID:  uuid.New(),
+		Title:   "First Blog",
+		Content: "Content of first blog",
+	}
+	testBlog2 := model.Blog{
+		BlogID:  uuid.New(),
+		UserID:  uuid.New(),
+		Title:   "Second Blog",
+		Content: "Content of second blog",
+	}
+
+	err = pgRepo.Create(ctx, &testBlog1)
+	require.NoError(t, err)
+
+	err = pgRepo.Create(ctx, &testBlog2)
+	require.NoError(t, err)
+
+	finalCount, err := pgRepo.Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, initialCount+2, finalCount)
+}
+
+func Test_GetAllBlogs(t *testing.T) {
+	const (
+		limit  = 10
+		offset = 0
+	)
+	ctx := context.Background()
+	firstblogs, err := pgRepo.GetAll(ctx, limit, offset)
 	require.NoError(t, err)
 
 	testBlog1 := model.Blog{
@@ -141,7 +175,7 @@ func Test_GetAllBlogs(t *testing.T) {
 	_ = pgRepo.Create(ctx, &testBlog1)
 	_ = pgRepo.Create(ctx, &testBlog2)
 
-	blogs, err := pgRepo.GetAll(ctx)
+	blogs, err := pgRepo.GetAll(ctx, limit, offset)
 	require.NoError(t, err)
 	require.Equal(t, len(blogs), len(firstblogs)+2)
 }

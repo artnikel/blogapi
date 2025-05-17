@@ -24,3 +24,9 @@ type User struct {
 	RefreshToken string    `json:"refreshToken"`
 	Admin        bool      `json:"-"`
 }
+
+// BlogListResponse is struct for pagination
+type BlogListResponse struct {
+	Blogs []*Blog `json:"blogs"`
+	Count int     `json:"count"`
+}

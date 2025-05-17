@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/artnikel/blogapi/internal/model"
 	"github.com/artnikel/blogapi/internal/service"
@@ -20,7 +21,7 @@ type BlogService interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteBlogsByUserID(ctx context.Context, id uuid.UUID) error
 	Update(ctx context.Context, blog *model.Blog) error
-	GetAll(ctx context.Context) ([]*model.Blog, error)
+	GetAll(ctx context.Context, limit, offset int) (*model.BlogListResponse, error)
 	GetByUserID(ctx context.Context, id uuid.UUID) ([]*model.Blog, error)
 }
 
@@ -222,12 +223,23 @@ func (h *Handler) Update(c echo.Context) error {
 
 // GetAll processes the GET request to retrieve all blogs
 func (h *Handler) GetAll(c echo.Context) error {
-	blogs, err := h.srvBlog.GetAll(c.Request().Context())
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+
+	resp, err := h.srvBlog.GetAll(c.Request().Context(), limit, offset)
 	if err != nil {
 		log.Errorf("srvBlog.GetAll - %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Failed to get all blogs")
 	}
-	return c.JSON(http.StatusOK, blogs)
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // GetByUserID processes the GET request to retrieve all blogs of a certain user
