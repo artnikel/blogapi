@@ -347,10 +347,15 @@ func Test_GetAll(t *testing.T) {
 		{BlogID: uuid.New(), Title: "Title2", Content: "Content2"},
 	}
 
-	mockService.On("GetAll", mock.Anything).Return(blogs, nil)
+	resp := &model.BlogListResponse{
+		Blogs: blogs,
+		Count: 2,
+	}
+
+	mockService.On("GetAll", mock.Anything, 10, 0).Return(resp, nil)
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/blogs", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/blogs?limit=10&offset=0", http.NoBody)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -358,10 +363,10 @@ func Test_GetAll(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
 
-	var respBlogs []*model.Blog
-	err = json.Unmarshal(rec.Body.Bytes(), &respBlogs)
+	var respBlogList model.BlogListResponse
+	err = json.Unmarshal(rec.Body.Bytes(), &respBlogList)
 	require.NoError(t, err)
-	require.Equal(t, blogs, respBlogs)
+	require.Equal(t, resp, &respBlogList)
 
 	mockService.AssertExpectations(t)
 }

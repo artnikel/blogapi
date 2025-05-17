@@ -70,19 +70,31 @@ func (p *PgRepository) Update(ctx context.Context, blog *model.Blog) error {
 	return nil
 }
 
-// GetAll retrieves all blogs records from the db
-func (p *PgRepository) GetAll(ctx context.Context) ([]*model.Blog, error) {
-	var blogs []*model.Blog
-	rows, err := p.pool.Query(ctx, "SELECT blogid, userid, title, content, releasetime FROM blog")
+// Count returns count of blogs
+func (p *PgRepository) Count(ctx context.Context) (int, error) {
+	var count int
+	err := p.pool.QueryRow(ctx, "SELECT COUNT(*) FROM blog").Scan(&count)
 	if err != nil {
-		return nil, fmt.Errorf("error in method p.pool.Query(): %w", err)
+		return 0, fmt.Errorf("error in Count: %w", err)
+	}
+	return count, nil
+}
+
+// GetAll retrieves all blogs records from the db
+func (p *PgRepository) GetAll(ctx context.Context, limit, offset int) ([]*model.Blog, error) {
+	query := `SELECT blogid, userid, title, content, releasetime FROM blog ORDER BY releasetime DESC LIMIT $1 OFFSET $2`
+
+	rows, err := p.pool.Query(ctx, query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("error in p.pool.Query(): %w", err)
 	}
 	defer rows.Close()
+
+	var blogs []*model.Blog
 	for rows.Next() {
 		var blog model.Blog
-		err := rows.Scan(&blog.BlogID, &blog.UserID, &blog.Title, &blog.Content, &blog.ReleaseTime)
-		if err != nil {
-			return nil, fmt.Errorf("error in method rows.Scan(): %w", err)
+		if err := rows.Scan(&blog.BlogID, &blog.UserID, &blog.Title, &blog.Content, &blog.ReleaseTime); err != nil {
+			return nil, fmt.Errorf("error in rows.Scan(): %w", err)
 		}
 		blogs = append(blogs, &blog)
 	}

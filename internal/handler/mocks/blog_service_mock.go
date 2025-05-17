@@ -235,27 +235,27 @@ func (_c *MockBlogService_Get_Call) RunAndReturn(run func(ctx context.Context, i
 }
 
 // GetAll provides a mock function for the type MockBlogService
-func (_mock *MockBlogService) GetAll(ctx context.Context) ([]*model.Blog, error) {
-	ret := _mock.Called(ctx)
+func (_mock *MockBlogService) GetAll(ctx context.Context, limit int, offset int) (*model.BlogListResponse, error) {
+	ret := _mock.Called(ctx, limit, offset)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAll")
 	}
 
-	var r0 []*model.Blog
+	var r0 *model.BlogListResponse
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]*model.Blog, error)); ok {
-		return returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) (*model.BlogListResponse, error)); ok {
+		return returnFunc(ctx, limit, offset)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []*model.Blog); ok {
-		r0 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) *model.BlogListResponse); ok {
+		r0 = returnFunc(ctx, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*model.Blog)
+			r0 = ret.Get(0).(*model.BlogListResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = returnFunc(ctx, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -269,23 +269,25 @@ type MockBlogService_GetAll_Call struct {
 
 // GetAll is a helper method to define mock.On call
 //   - ctx
-func (_e *MockBlogService_Expecter) GetAll(ctx interface{}) *MockBlogService_GetAll_Call {
-	return &MockBlogService_GetAll_Call{Call: _e.mock.On("GetAll", ctx)}
+//   - limit
+//   - offset
+func (_e *MockBlogService_Expecter) GetAll(ctx interface{}, limit interface{}, offset interface{}) *MockBlogService_GetAll_Call {
+	return &MockBlogService_GetAll_Call{Call: _e.mock.On("GetAll", ctx, limit, offset)}
 }
 
-func (_c *MockBlogService_GetAll_Call) Run(run func(ctx context.Context)) *MockBlogService_GetAll_Call {
+func (_c *MockBlogService_GetAll_Call) Run(run func(ctx context.Context, limit int, offset int)) *MockBlogService_GetAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		run(args[0].(context.Context), args[1].(int), args[2].(int))
 	})
 	return _c
 }
 
-func (_c *MockBlogService_GetAll_Call) Return(blogs []*model.Blog, err error) *MockBlogService_GetAll_Call {
-	_c.Call.Return(blogs, err)
+func (_c *MockBlogService_GetAll_Call) Return(blogListResponse *model.BlogListResponse, err error) *MockBlogService_GetAll_Call {
+	_c.Call.Return(blogListResponse, err)
 	return _c
 }
 
-func (_c *MockBlogService_GetAll_Call) RunAndReturn(run func(ctx context.Context) ([]*model.Blog, error)) *MockBlogService_GetAll_Call {
+func (_c *MockBlogService_GetAll_Call) RunAndReturn(run func(ctx context.Context, limit int, offset int) (*model.BlogListResponse, error)) *MockBlogService_GetAll_Call {
 	_c.Call.Return(run)
 	return _c
 }
