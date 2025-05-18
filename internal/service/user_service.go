@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/artnikel/blogapi/internal/config"
+	"github.com/artnikel/blogapi/internal/constants"
 	"github.com/artnikel/blogapi/internal/middleware"
 	"github.com/artnikel/blogapi/internal/model"
 	"github.com/golang-jwt/jwt/v5"
@@ -35,13 +36,6 @@ type UserService struct {
 func NewUserService(rpsUser UserRepository, cfg *config.Config) *UserService {
 	return &UserService{rpsUser: rpsUser, cfg: cfg}
 }
-
-// Expiration time for an access and a refresh tokens
-const (
-	accessTokenExpiration  = 15 * time.Minute
-	refreshTokenExpiration = 72 * time.Hour
-	bcryptCost             = 14
-)
 
 // TokenPair contains an Access and a Refresh tokens
 type TokenPair struct {
@@ -176,7 +170,7 @@ func (s *UserService) TokensIDCompare(tokenPair TokenPair) (uuid.UUID, bool, err
 
 // HashPassword is a method of ServiceUser that makes from bytes hashed value
 func (s *UserService) HashPassword(password []byte) ([]byte, error) {
-	bytes, err := bcrypt.GenerateFromPassword(password, bcryptCost)
+	bytes, err := bcrypt.GenerateFromPassword(password, constants.BcryptCost)
 	if err != nil {
 		return bytes, fmt.Errorf("bcrypt.GenerateFromPassword - %w", err)
 	}
@@ -194,11 +188,11 @@ func (s *UserService) CheckPasswordHash(hash, password []byte) (bool, error) {
 
 // GenerateTokenPair generates pair of access and refresh tokens
 func (s *UserService) GenerateTokenPair(id uuid.UUID, isAdmin bool) (TokenPair, error) {
-	accessToken, err := s.GenerateJWTToken(accessTokenExpiration, id, isAdmin)
+	accessToken, err := s.GenerateJWTToken(constants.AccessTokenExpiration, id, isAdmin)
 	if err != nil {
 		return TokenPair{}, fmt.Errorf("GenerateJWTToken - %w", err)
 	}
-	refreshToken, err := s.GenerateJWTToken(refreshTokenExpiration, id, isAdmin)
+	refreshToken, err := s.GenerateJWTToken(constants.RefreshTokenExpiration, id, isAdmin)
 	if err != nil {
 		return TokenPair{}, fmt.Errorf("GenerateJWTToken - %w", err)
 	}

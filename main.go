@@ -8,16 +8,20 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/artnikel/blogapi/internal/config"
+	"github.com/artnikel/blogapi/internal/constants"
 	"github.com/artnikel/blogapi/internal/handler"
 	customMiddleware "github.com/artnikel/blogapi/internal/middleware"
 	"github.com/artnikel/blogapi/internal/repository"
 	"github.com/artnikel/blogapi/internal/service"
 	"github.com/caarlos0/env"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -75,7 +79,23 @@ func main() {
 	e.POST("/refresh", handlers.Refresh)
 	e.DELETE("/user/:id", handlers.DeleteUserByID, customMiddleware.JWTMiddleware(&cfg))
 
-	if err := e.Start(":" + cfg.BlogServerPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("failed to start server", "error", err)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		if err := e.Start(":" + cfg.BlogServerPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("failed to start server", "error", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("Shutting down gracefully")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), constants.ServerTimeout)
+	defer cancel()
+
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		log.Printf("http server shutdown error %v", err)
 	}
+	log.Println("Server gracefully stopped")
 }

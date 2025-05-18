@@ -10,7 +10,7 @@ import (
 	"github.com/artnikel/blogapi/internal/config"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // JWTMiddleware is a middleware function that checks the validity of the JWT token in the request header
