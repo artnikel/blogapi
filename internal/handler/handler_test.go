@@ -11,7 +11,7 @@ import (
 	"github.com/artnikel/blogapi/internal/model"
 	"github.com/artnikel/blogapi/internal/service"
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/go-playground/validator.v9"

@@ -9,7 +9,7 @@ import (
 	"github.com/artnikel/blogapi/internal/model"
 	"github.com/artnikel/blogapi/internal/service"
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/validator.v9"
 )
